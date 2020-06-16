@@ -1,12 +1,16 @@
+#Authentication
+#Secure database
+
 from tkinter import *
 import os
 import sqlite3
+import time
 
 root = Tk()
 root.title("QWRTY")
+message = ""
 
 def Generate_pass():
-	message = ""
 	
 	try:
 		#Generating password
@@ -28,41 +32,62 @@ def Generate_pass():
 		c.close()
 		conn.close()
 
-		message = "Password generated sucessfully!"
+		Message_label['text'] = "Password generated sucessfully!"
+		Message_label.after(1000, lambda: Message_label.destroy())
 	
 	except:
-		message = "Password not generated sucessfully!"
-
-	#label to display message
-	Message_label = Label(root, text = message, fg = 'yellow', bg = 'black')
-	#Displaying the label
-	Message_label.grid(row = 1, column = 2)
+		Message_label['text'] = "Password not generated sucessfully!"
+		Message_label.after(1000, lambda: Message_label.destroy())
 
 def Get_pass():
-	#Connecting to the database
-	conn = sqlite3.connect('Passwords.db')
-	c = conn.cursor()
+	#2-factor authentication
+	auth_pass = auth_box.get()
 
-	#Selecting passwords to display
-	data = c.execute('SELECT Password, Description FROM Passwords')
+	if auth_pass == "1234":
+		#Connecting to the database
+		conn = sqlite3.connect('Passwords.db')
+		c = conn.cursor()
 
-	#Saving passwords in a variable
-	line = ""
-	for column in data:
-		line += "Password: " + column[0] + "\n" + "Description: " + column[1] + "\n\n"
+		#Selecting passwords to display
+		data = c.execute('SELECT Password, Description FROM Passwords')
 
-	#Closing database connection
-	c.close()
-	conn.close()
+		#Saving passwords in a variable
+		line = ""
+		for column in data:
+			line += "Password: " + column[0] + "\n" + "Description: " + column[1] + "\n\n"
 
-	#Label to display message
-	pass_display_label = Label(root, text = line, fg = "yellow", bg = "black")
-	#Displayng the label
-	pass_display_label.grid(row = 2, column = 0)
+		#Closing database connection
+		c.close()
+		conn.close()
+
+		#Label to display message
+		pass_display_label = Label(root, text = line, fg = "yellow", bg = "black")
+		#Displayng the label
+		pass_display_label.grid(row = 2, column = 0)
+
+		#Clearing and deleting the variable storing passwords
+		line = None
+		del line
+
+	else:
+		Message_label['text'] = "Wrong password!"
+		Message_label.after(1000, lambda: Message_label.destroy())
+
+#label to display message
+Message_label = Label(root, text = message, fg = 'yellow', bg = 'black')
+#Displaying the label
+Message_label.grid(row = 1, column = 2)
 
 #Creating password description textbox
 Pass_desc_box = Entry(root)
 Pass_desc_box.insert(0,"Enter password description")
+#Displaying textbox
+Pass_desc_box.grid(row = 0, column = 0)
+
+#Authentication textbox
+auth_box = Entry(root)
+#Displaying textbox
+auth_box.grid(row = 0, column = 1)
 
 #Creating buttons
 generate_button = Button(root, command = Generate_pass, text = 'Generate Password', fg = 'yellow', bg = 'black', height = 8, width = 20)
@@ -71,8 +96,5 @@ get_pass_button = Button(root, command = Get_pass, text = 'Get Passwords', fg = 
 #Displaying buttons
 get_pass_button.grid(row = 1, column = 1)
 generate_button.grid(row = 1, column = 0)
-
-#Displaying textbox
-Pass_desc_box.grid(row = 0, column = 0)
 
 root.mainloop()
